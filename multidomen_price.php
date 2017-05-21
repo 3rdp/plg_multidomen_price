@@ -1,15 +1,12 @@
 <?php
 /**
- * Multidomen Price 
+ * CLEAN VERSION
  * 
  * @author github.com/3rdp
- * @version 0.1
+ * @version 0.2
  * 
 */
 defined('_JEXEC') or die;
-
-// $this->product_price_wp = $this->product_price;
-// $this->product_price_calculate = $this->getPriceWithParams();
 
 class PlgJshoppingProductsMultidomen_Price extends JPlugin
 {
