@@ -24,7 +24,7 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
     /**
      * Получаем имя субдомена
      *
-     * @return string
+     * @return  string
      */
 	private function getSubdomain() {
 		$tmp = explode('.', $_SERVER['HTTP_HOST']);
@@ -38,9 +38,9 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
     /**
      * Получаем переменные для данного субдомена из таблицы
      *
-     * @param string
+     * @param   string  $subdomen   Имя судбомена (anapa, omsk, …)
      *
-     * @return array
+     * @return  array
      */
     private function getResBody($subdomen) {
 		$db = JFactory::getDbo();
@@ -63,7 +63,7 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
     /**
      * Принимаем данные из админки через пост, переводим в json и сохраняем в базу
      *
-     * @param array
+     * @param   array   $post       Данные в POST-запросе 
      */
 	public function onBeforeSaveCategory($post) {
 		$arr = $post['multidomen_price'];
@@ -82,7 +82,7 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
     /**
      * Переводим json из бд в объекты, которые потом на странице будут выводиться
      *
-     * @param object
+     * @param   object  $view       Объект для view отображаемой страницы
      */
 	public function onBeforeEditCategories($view) { 
 		$view->assign('arrMultidomenPrice', $this->decodeJson( $view->category->multidomen_price ));
@@ -99,7 +99,7 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
     /**
      * Меняем цены в категории (!)
      *
-     * @param array
+     * @param   array   $products   Список всех продуктов, которые будут отображены в категории
      */
 	public function onBeforeDisplayProductList($products) { 
         $sub = $this->getSubdomain(); // достали город (поддомен)
@@ -136,12 +136,12 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
     /**
      * Меняем цены в корзине (или карточке товара?)
      *
-     * @param int
-     * @param bool
-     * @param bool
-     * @param bool
-     * @param obj
-     * @param array
+     * @param   int     $quantity   Количество данного товара в корзине.
+     * @param   bool    $enableCur  
+     * @param   bool    $enableUs
+     * @param   bool    $enablePa
+     * @param   obj     $product    Объект продукта.
+     * @param   array   $cartProd   
      */
 	public function onBeforeCalculatePriceProduct($quantity, $enableCurrency, $enableUserDiscount, $enableParamsTax, $product, $cartProduct) { 
         $productPrice = (int)$product->product_price; // достали цену продукта
