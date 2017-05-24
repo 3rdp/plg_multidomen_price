@@ -1,12 +1,15 @@
 <?php
 /**
- * CLEAN VERSION
+ * Multidomen Price
  * 
  * @author github.com/3rdp
  * @version 0.2
  * 
 */
 defined('_JEXEC') or die;
+
+$this->product_price_wp = $this->product_price;
+$this->product_price_calculate = $this->getPriceWithParams();
 
 class PlgJshoppingProductsMultidomen_Price extends JPlugin
 {
@@ -102,10 +105,10 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
         $sub = $this->getSubdomain(); // достали город (поддомен)
 		$excelRow = $this->getResBody($sub); // достали соотв. строчку из multidomen.xls
 		$v = array(
-			'skidka' 	=> isset($excelRow['[[skidka]]']) ? (int)$excelRow['[[skidka]]'] : 0,
-			'transp' 	=> isset($excelRow['[[transp]]']) ? (int)$excelRow['[[transp]]'] : 0,
-			'pribyl' 	=> isset($excelRow['[[pribyl]]']) ? (int)$excelRow['[[pribyl]]'] : 0,
-			'dop_price' => isset($excelRow['[[dop_price]]']) ? (int)$excelRow['[[dop_price]]'] : 0
+			'skidka' 	=> $this->_isset("skidka"),
+			'transp' 	=> $this->_isset('transp'),
+			'pribyl' 	=> $this->_isset('pribyl'),
+			'dop_price' => $this->_isset('dop_price')
 			// 'price'		=> $product->product_price // не, это не надо. это на второй стадии надо
 		);
 		// тут-то и можно сделать импорт файла, в котором будет массив значений, просто с ксатомными индексами
@@ -145,10 +148,10 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
 		$sub = $this->getSubdomain(); // достали город (поддомен)
 		$excelRow = $this->getResBody($sub); // достали соотв. строчку из multidomen.xls
 		$v = array(
-			'skidka' 	=> isset($excelRow['[[skidka]]']) ? (int)$excelRow['[[skidka]]'] : 0,
-			'transp' 	=> isset($excelRow['[[transp]]']) ? (int)$excelRow['[[transp]]'] : 0,
-			'pribyl' 	=> isset($excelRow['[[pribyl]]']) ? (int)$excelRow['[[pribyl]]'] : 0,
-			'dop_price' => isset($excelRow['[[dop_price]]']) ? (int)$excelRow['[[dop_price]]'] : 0
+			'skidka' 	=> $this->_isset("skidka"),
+			'transp' 	=> $this->_isset('transp'),
+			'pribyl' 	=> $this->_isset('pribyl'),
+			'dop_price' => $this->_isset('dop_price')
 		);
         // формула у нас одна для всех
         $productPrice = $productPrice - ceil($productPrice / 100 * $v['skidka']) + $v['transp'] + $v['pribyl'] + $v['dop_price']; 
@@ -156,6 +159,11 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
 		$product->product_price_calculate = "$productPrice";
 		return $product;
 	}
-	
+
+    private function _isset($key) {
+        return isset(excelRow["[[$key]]"]) ? (int)$excelRow["[[$key]]"] : 0;
+
+    } 
+    
 }
 ?>
