@@ -11,6 +11,54 @@ defined('_JEXEC') or die;
 class PlgJshoppingProductsMultidomen_Price extends JPlugin
 {
 
+    /**
+     * Меняем цены в категории (!)
+     *
+     * @param   array   $products   Список всех продуктов, которые будут отображены в категории
+     */
+	public function onBeforeDisplayProductList($products) { 
+		$v = $this->getPriceValues();
+		if ($this->priceJson) {
+			// а здесь должна быть проверка по городу
+			$formulesArr = $this->decodeJson($this->priceJson);
+			$formula = $formulesArr[count( $formulesArr ) - 1]; // достаем последнюю
+			$priceText = str_replace(array_keys($v), array_values($v), $formula->formula);
+			foreach ($products as $product) {
+				$productFormula = str_replace( 'price', (int)$product->product_price, $priceText);
+				// здесь ещё будет проверка на лишние буквы
+				$productPrice = eval('return ' . $productFormula . ";");
+				$product->product_price = $productPrice;
+			}
+		} else {
+			foreach ($products as $product) {
+				$productPrice = (int)$product->product_price;
+                // формула у нас одна для всех
+                $productPrice = $productPrice - ceil($productPrice / 100 * $v['skidka']) + $v['transp'] + $v['pribyl'] + $v['dop_price']; 
+				$product->product_price = $productPrice;
+			}
+		}
+	}
+
+    /**
+     * Меняем цены в корзине (или карточке товара?)
+     *
+     * @param   int     $quantity   Количество данного товара в корзине.
+     * @param   bool    $enableCur  
+     * @param   bool    $enableUs
+     * @param   bool    $enablePa
+     * @param   obj     $product    Объект продукта.
+     * @param   array   $cartProd   
+     */
+	public function onBeforeCalculatePriceProduct($quantity, $enableCurrency, $enableUserDiscount, $enableParamsTax, $product, $cartProduct) { 
+        $productPrice = (int)$product->product_price; // достали цену продукта
+		$v = $this->getPriceValues();
+        // формула у нас одна для всех
+        $productPrice = $productPrice - ceil($productPrice / 100 * $v['skidka']) + $v['transp'] + $v['pribyl'] + $v['dop_price']; 
+		$product->product_price_wp = "$productPrice";
+		$product->product_price_calculate = "$productPrice";
+		return $product;
+	}
+
     private $str = '
 [{
            "formula":  "$v - [[skidka]]",
@@ -109,59 +157,11 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
 			'dop_price' => $this->_isset('dop_price')
 		);
     } 
-
-    /**
-     * Меняем цены в категории (!)
-     *
-     * @param   array   $products   Список всех продуктов, которые будут отображены в категории
-     */
-	public function onBeforeDisplayProductList($products) { 
-		$v = $this->getPriceValues();
-		if ($this->priceJson) {
-			// а здесь должна быть проверка по городу
-			$formulesArr = $this->decodeJson($this->priceJson);
-			$formula = $formulesArr[count( $formulesArr ) - 1]; // достаем последнюю
-			$priceText = str_replace(array_keys($v), array_values($v), $formula->formula);
-			foreach ($products as $product) {
-				$productFormula = str_replace( 'price', (int)$product->product_price, $priceText);
-				// здесь ещё будет проверка на лишние буквы
-				$productPrice = eval('return ' . $productFormula . ";");
-				$product->product_price = $productPrice;
-			}
-		} else {
-			foreach ($products as $product) {
-				$productPrice = (int)$product->product_price;
-                // формула у нас одна для всех
-                $productPrice = $productPrice - ceil($productPrice / 100 * $v['skidka']) + $v['transp'] + $v['pribyl'] + $v['dop_price']; 
-				$product->product_price = $productPrice;
-			}
-		}
-	}
-
-    /**
-     * Меняем цены в корзине (или карточке товара?)
-     *
-     * @param   int     $quantity   Количество данного товара в корзине.
-     * @param   bool    $enableCur  
-     * @param   bool    $enableUs
-     * @param   bool    $enablePa
-     * @param   obj     $product    Объект продукта.
-     * @param   array   $cartProd   
-     */
-	public function onBeforeCalculatePriceProduct($quantity, $enableCurrency, $enableUserDiscount, $enableParamsTax, $product, $cartProduct) { 
-        $productPrice = (int)$product->product_price; // достали цену продукта
-		$v = $this->getPriceValues();
-        // формула у нас одна для всех
-        $productPrice = $productPrice - ceil($productPrice / 100 * $v['skidka']) + $v['transp'] + $v['pribyl'] + $v['dop_price']; 
-		$product->product_price_wp = "$productPrice";
-		$product->product_price_calculate = "$productPrice";
-		return $product;
-	}
-
+    
     private function _isset($key) {
         return isset($this->excelRow["[[$key]]"]) ? (int)$this->excelRow["[[$key]]"] : 0;
 
     } 
-    
+
 }
 ?>
