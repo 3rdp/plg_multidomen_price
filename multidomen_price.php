@@ -95,22 +95,28 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
 	}
 
     /**
+     * Достаю из бд настройки цен для данного мультидомена.
+     * 
+     */
+    private function getPriceValues() {
+        $sub = $this->getSubdomain(); // достали город (поддомен)
+		// $excelRow = $this->getResBody($sub); // достали соотв. строчку из multidomen.xls
+        $this->excelRow = $this->getResBody($sub);
+		return array(
+			'skidka' 	=> $this->_isset("skidka"),
+			'transp' 	=> $this->_isset('transp'),
+			'pribyl' 	=> $this->_isset('pribyl'),
+			'dop_price' => $this->_isset('dop_price')
+		);
+    } 
+
+    /**
      * Меняем цены в категории (!)
      *
      * @param   array   $products   Список всех продуктов, которые будут отображены в категории
      */
 	public function onBeforeDisplayProductList($products) { 
-        $sub = $this->getSubdomain(); // достали город (поддомен)
-		$excelRow = $this->getResBody($sub); // достали соотв. строчку из multidomen.xls
-        $this->excelRow = $excelRow;
-		$v = array(
-			'skidka' 	=> $this->_isset("skidka"),
-			'transp' 	=> $this->_isset('transp'),
-			'pribyl' 	=> $this->_isset('pribyl'),
-			'dop_price' => $this->_isset('dop_price')
-			// 'price'		=> $product->product_price // не, это не надо. это на второй стадии надо
-		);
-		// тут-то и можно сделать импорт файла, в котором будет массив значений, просто с ксатомными индексами
+		$v = $this->getPriceValues();
 		if ($this->priceJson) {
 			// а здесь должна быть проверка по городу
 			$formulesArr = $this->decodeJson($this->priceJson);
@@ -144,15 +150,7 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
      */
 	public function onBeforeCalculatePriceProduct($quantity, $enableCurrency, $enableUserDiscount, $enableParamsTax, $product, $cartProduct) { 
         $productPrice = (int)$product->product_price; // достали цену продукта
-		$sub = $this->getSubdomain(); // достали город (поддомен)
-		$excelRow = $this->getResBody($sub); // достали соотв. строчку из multidomen.xls
-        $this->excelRow = $excelRow;
-		$v = array(
-			'skidka' 	=> $this->_isset("skidka"),
-			'transp' 	=> $this->_isset('transp'),
-			'pribyl' 	=> $this->_isset('pribyl'),
-			'dop_price' => $this->_isset('dop_price')
-		);
+		$v = $this->getPriceValues();
         // формула у нас одна для всех
         $productPrice = $productPrice - ceil($productPrice / 100 * $v['skidka']) + $v['transp'] + $v['pribyl'] + $v['dop_price']; 
 		$product->product_price_wp = "$productPrice";
