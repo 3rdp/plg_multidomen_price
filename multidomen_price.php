@@ -8,13 +8,10 @@
 */
 defined('_JEXEC') or die;
 
-$this->product_price_wp = $this->product_price;
-$this->product_price_calculate = $this->getPriceWithParams();
-
 class PlgJshoppingProductsMultidomen_Price extends JPlugin
 {
 
-    $str = '
+    private $str = '
 [{
            "formula":  "$v - [[skidka]]",
            "switch":   "only",
@@ -61,11 +58,12 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
 	}
 
     /**
-     * Принимаем данные из админки через пост, переводим в json и сохраняем в базу
+     * Принимаю настройки мультидомена из админки категории. 
+     * Перевожу в json и сохраняю в базу.
      *
      * @param   array   $post       Данные в POST-запросе 
      */
-	public function onBeforeSaveCategory($post) {
+	private function onBeforeSaveCategory($post) {
 		$arr = $post['multidomen_price'];
 		$json = json_encode($arr);
         $id = $post['category_id'];
@@ -84,7 +82,7 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
      *
      * @param   object  $view       Объект для view отображаемой страницы
      */
-	public function onBeforeEditCategories($view) { 
+	private function onBeforeEditCategories($view) { 
 		$view->assign('arrMultidomenPrice', $this->decodeJson( $view->category->multidomen_price ));
 		$view->assign('citiesMultidomen', $this->getCities());
 	}
@@ -92,7 +90,7 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
     /**
      * ???
      */
-	public function onBeforeDisplayCategory($category, $sub_categories) {
+	private function onBeforeDisplayCategory($category, $sub_categories) {
 		$this->priceJson = $category->multidomen_price;
 	}
 
@@ -104,6 +102,7 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
 	public function onBeforeDisplayProductList($products) { 
         $sub = $this->getSubdomain(); // достали город (поддомен)
 		$excelRow = $this->getResBody($sub); // достали соотв. строчку из multidomen.xls
+        $this->excelRow = $excelRow;
 		$v = array(
 			'skidka' 	=> $this->_isset("skidka"),
 			'transp' 	=> $this->_isset('transp'),
@@ -147,6 +146,7 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
         $productPrice = (int)$product->product_price; // достали цену продукта
 		$sub = $this->getSubdomain(); // достали город (поддомен)
 		$excelRow = $this->getResBody($sub); // достали соотв. строчку из multidomen.xls
+        $this->excelRow = $excelRow;
 		$v = array(
 			'skidka' 	=> $this->_isset("skidka"),
 			'transp' 	=> $this->_isset('transp'),
@@ -161,7 +161,7 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
 	}
 
     private function _isset($key) {
-        return isset(excelRow["[[$key]]"]) ? (int)$excelRow["[[$key]]"] : 0;
+        return isset($this->excelRow["[[$key]]"]) ? (int)$this->excelRow["[[$key]]"] : 0;
 
     } 
     
