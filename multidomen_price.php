@@ -17,7 +17,7 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
      * @param   array   $products   Список всех продуктов, которые будут отображены в категории
      */
 	public function onBeforeDisplayProductList($products) { 
-		$v = $this->getPriceValues();
+		// $v = $this->getPriceValues();
 		if ($this->priceJson) {
 			// а здесь должна быть проверка по городу
 			$formulesArr = $this->decodeJson($this->priceJson);
@@ -51,13 +51,24 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
      */
 	public function onBeforeCalculatePriceProduct($quantity, $enableCurrency, $enableUserDiscount, $enableParamsTax, $product, $cartProduct) { 
         $productPrice = (int)$product->product_price; // достали цену продукта
-		$v = $this->getPriceValues();
+		$v = $this->getPriceValues($product->product_id);
         // формула у нас одна для всех
-        $productPrice = $productPrice - ceil($productPrice / 100 * $v['skidka']) + $v['transp'] + $v['pribyl'] + $v['dop_price']; 
+        // $productPrice = $productPrice - ceil($productPrice / 100 * $v['skidka']) + $v['transp'] + $v['pribyl'] + $v['dop_price']; 
+        $productPrice = $v["price"];
+        var_dump($productPrice);
 		$product->product_price_wp = "$productPrice";
 		$product->product_price_calculate = "$productPrice";
 		return $product;
 	}
+
+    private function getFactory($sub) {
+        $db = JFactory::getDbo();
+        $dbname = $db->quoteName("#__multifactories_city");
+        $query = "SELECT factory_id FROM $dbname
+            WHERE subdomain_name = '$sub'";
+        $db->setQuery($query);
+        return $db->loadResult();
+    } 
 
     private $str = '
 [{
@@ -146,11 +157,18 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
      * Достаю из бд настройки цен для данного мультидомена.
      * 
      */
-    private function getPriceValues() {
+    private function getPriceValues($product_id = '0') {
         $sub = $this->getSubdomain(); // достали город (поддомен)
-		// $excelRow = $this->getResBody($sub); // достали соотв. строчку из multidomen.xls
+        $factory = $this->getFactory($sub);
+        $db = JFactory::getDbo();
+        $dbname = $db->quoteName("#__multifactories_prices");
+        $query = "SELECT price FROM $dbname
+            WHERE factory_id = $factory AND product_id = $product_id";
+        $db->setQuery($query);
+        $price = $db->loadResult();
         $this->excelRow = $this->getResBody($sub);
 		return array(
+            'price'     => $price,
 			'skidka' 	=> $this->_isset("skidka"),
 			'transp' 	=> $this->_isset('transp'),
 			'pribyl' 	=> $this->_isset('pribyl'),
