@@ -17,25 +17,14 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
      * @param   array   $products   Список всех продуктов, которые будут отображены в категории
      */
 	public function onBeforeDisplayProductList($products) { 
-		// $v = $this->getPriceValues();
-		if ($this->priceJson) {
-			// а здесь должна быть проверка по городу
-			$formulesArr = $this->decodeJson($this->priceJson);
-			$formula = $formulesArr[count( $formulesArr ) - 1]; // достаем последнюю
-			$priceText = str_replace(array_keys($v), array_values($v), $formula->formula);
-			foreach ($products as $product) {
-				$productFormula = str_replace( 'price', (int)$product->product_price, $priceText);
-				// здесь ещё будет проверка на лишние буквы
-				$productPrice = eval('return ' . $productFormula . ";");
-				$product->product_price = $productPrice;
-			}
-		} else {
-			foreach ($products as $product) {
-				$productPrice = (int)$product->product_price;
-                // формула у нас одна для всех
-                $productPrice = $productPrice - ceil($productPrice / 100 * $v['skidka']) + $v['transp'] + $v['pribyl'] + $v['dop_price']; 
-				$product->product_price = $productPrice;
-			}
+        $v = $this->getPricesArrValues($products);
+        foreach ($products as $product) {
+            $productPrice = (int)$v["price"][$product->product_id]->price;
+            if (!$productPrice) {
+                $productPrice = (int)$product->product_price;
+            }
+            $productPrice = $productPrice - ceil($productPrice / 100 * $v['skidka']) + $v['transp'] + $v['pribyl'] + $v['dop_price']; 
+			$product->product_price = $productPrice;
 		}
 	}
 
@@ -50,15 +39,15 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
      * @param   array   $cartProd   
      */
 	public function onBeforeCalculatePriceProduct($quantity, $enableCurrency, $enableUserDiscount, $enableParamsTax, $product, $cartProduct) { 
-        $productPrice = (int)$product->product_price; // достали цену продукта
 		$v = $this->getPriceValues($product->product_id);
-        // формула у нас одна для всех
-        // $productPrice = $productPrice - ceil($productPrice / 100 * $v['skidka']) + $v['transp'] + $v['pribyl'] + $v['dop_price']; 
         $productPrice = $v["price"];
-        var_dump($productPrice);
+        if (!$productPrice) {
+            $productPrice = (int)$product->product_price; // достали цену продукта
+        }
+        // $productPrice = $productPrice - ceil($productPrice / 100 * $v['skidka']) + $v['transp'] + $v['pribyl'] + $v['dop_price']; 
 		$product->product_price_wp = "$productPrice";
 		$product->product_price_calculate = "$productPrice";
-		return $product;
+		// return $product;
 	}
 
     private function getFactory($sub) {
@@ -155,7 +144,7 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
 
     /**
      * Достаю из бд настройки цен для данного мультидомена.
-     * 
+     * И данного продукта.
      */
     private function getPriceValues($product_id = '0') {
         $sub = $this->getSubdomain(); // достали город (поддомен)
@@ -168,6 +157,35 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
         $price = $db->loadResult();
         $this->excelRow = $this->getResBody($sub);
 		return array(
+            'price'     => $price,
+			'skidka' 	=> $this->_isset("skidka"),
+			'transp' 	=> $this->_isset('transp'),
+			'pribyl' 	=> $this->_isset('pribyl'),
+			'dop_price' => $this->_isset('dop_price')
+		);
+    } 
+
+    /**
+     * Достаю цены, только для массива продуктов.
+     * 
+     */
+    private function getPricesArrValues($products = null) {
+        if (!$products) return false;
+        $sub = $this->getSubdomain(); // достали город (поддомен)
+        $factory = $this->getFactory($sub);
+        $db = JFactory::getDbo();
+        $dbname = $db->quoteName("#__multifactories_prices");
+        $query = "SELECT price, product_id FROM $dbname
+            WHERE factory_id = $factory AND product_id IN (";
+        foreach ($products as $product)
+        {
+            $query .= $product->product_id . ', ';
+        }
+        $query = substr($query, 0, -2) . ")";
+        $db->setQuery($query);
+        $price = $db->loadObjectList("product_id");
+        $this->excelRow = $this->getResBody($sub);
+        return array(
             'price'     => $price,
 			'skidka' 	=> $this->_isset("skidka"),
 			'transp' 	=> $this->_isset('transp'),
