@@ -2,7 +2,7 @@
 <extension version="1.7.0" type="plugin" method="upgrade" group="jshoppingproducts"> 
 	<name>JoomShopping Multidomen Price</name>
 	<creationDate>20.11.2016</creationDate>
-	<version>1.0.0</version>
+	<version>1.0.1</version>
 	<author>3rdp</author>
 	<authorEmail>third.pancake16@gmail.com</authorEmail>
 	<authorUrl>github.com/3rdp</authorUrl>
