@@ -56,7 +56,9 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
         $query = "SELECT factory_id FROM $dbname
             WHERE subdomain_name = '$sub'";
         $db->setQuery($query);
-        return $db->loadResult();
+        $result = $db->loadResult();
+        if (!$result) $result = 2; // default factory (on capmex)
+        return $result;
     } 
 
     private $str = '
