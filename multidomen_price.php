@@ -50,6 +50,12 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin
 		// return $product;
 	}
 
+    public function onComplectProduct($product) {
+        // var_dump($product);
+        $v = $this->getPriceValues($product->product_id);
+        $product->product_price = $v["price"];
+    }
+
     private function getFactory($sub) {
         $db = JFactory::getDbo();
         $dbname = $db->quoteName("#__multifactories_city");
