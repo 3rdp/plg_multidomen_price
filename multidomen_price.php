@@ -11,7 +11,7 @@ defined('_JEXEC') or die;
 class PlgJshoppingProductsMultidomen_Price extends JPlugin {
 
     /**
-     * Меняем цены в категории (!)
+     * Меняем цены в категории
      *
      * @param   array   $products   Список всех продуктов, которые будут отображены в категории
      */
@@ -29,7 +29,7 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin {
     }
 
     /**
-     * Меняем цены в корзине (или карточке товара?)
+     * Меняем цены в корзине и карточке товара
      *
      * @param   int     $quantity   Количество данного товара в корзине.
      * @param   bool    $enableCur
@@ -159,7 +159,7 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin {
      */
     private function getPricesArrValues($products = null) {
         if (!$products || !count($products)) return false;
-        $sub = $this->getSubdomain() == 'capmex' ? 'capmex' : $this->getSubdomain();
+        $sub = $this->getSubdomain() == 'capmex' || $this->getSubdomain() == 'капмекс' ? 'capmex' : $this->getSubdomain();
         $db = JFactory::getDbo();
         $dbname = $db->quoteName("#__multifactories_prices_excel");
         $query = "SELECT price, product_id FROM $dbname
