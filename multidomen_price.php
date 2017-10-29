@@ -64,6 +64,8 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin {
         return $result;
     }
 
+    private $defaultSub = 'capmex';
+
     /**
      * Получаем имя субдомена
      *
@@ -159,7 +161,9 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin {
      */
     private function getPricesArrValues($products = null) {
         if (!$products || !count($products)) return false;
-        $sub = $this->getSubdomain() == 'capmex' || $this->getSubdomain() == 'капмекс' ? 'capmex' : $this->getSubdomain();
+        $arrServerName =  array_reverse(explode('.', $_SERVER["SERVER_NAME"]));
+        $siteName = $arrServerName[1];
+        $sub = $this->getSubdomain() == $siteName ? $this->defaultSub : $this->getSubdomain();
         $db = JFactory::getDbo();
         $dbname = $db->quoteName("#__multifactories_prices_excel");
         $query = "SELECT price, product_id FROM $dbname
