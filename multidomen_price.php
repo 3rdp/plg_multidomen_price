@@ -79,20 +79,6 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin {
         return $tmp[0];
     }
 
-    /**
-     * Получаем переменные для данного субдомена из таблицы
-     *
-     * @param   string  $subdomen   Имя судбомена (anapa, omsk, …)
-     *
-     * @return  array
-     */
-    private function getResBody($subdomen) {
-        $db = JFactory::getDbo();
-        $db->setQuery("SELECT * from `#__multidomen_excel` WHERE `subdomain_name` = '$subdomen'");
-        $results = $db->loadAssoc();
-        return $results;
-    }
-
     private function decodeJson($strJson) {
         return json_decode(htmlspecialchars_decode($strJson));
     }
@@ -175,36 +161,9 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin {
         $query = substr($query, 0, -2) . ")";
         $db->setQuery($query);
         $price = $db->loadObjectList("product_id");
-        $this->excelRow = $this->getResBody($sub);
         return array(
             'price' => $price
         );
     }
-
-    private function getPricesArrValues_OLD($products = null) {
-        if (!$products) return false;
-        $sub = $this->getSubdomain();
-        $factory = $this->getFactory($sub);
-        $db = JFactory::getDbo();
-        $dbname = $db->quoteName("#__multifactories_prices");
-        $query = "SELECT price, product_id FROM $dbname
-            WHERE factory_id = $factory AND product_id IN (";
-        foreach ($products as $product) {
-            $query .= $product->product_id . ', ';
-        }
-        $query = substr($query, 0, -2) . ")";
-        $db->setQuery($query);
-        $price = $db->loadObjectList("product_id");
-        $this->excelRow = $this->getResBody($sub);
-        return array(
-            'price' => $price
-        );
-    }
-
-    private function _isset($key) {
-        return isset($this->excelRow["[[$key]]"]) ? (int)$this->excelRow["[[$key]]"] : 0;
-
-    }
-
 }
 ?>
