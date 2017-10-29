@@ -53,43 +53,6 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin {
         $product->product_price = $this->getPrice($product);
     }
 
-    private function getFactory($sub) {
-        $db = JFactory::getDbo();
-        $dbname = $db->quoteName("#__multifactories_city");
-        $query = "SELECT factory_id FROM $dbname
-            WHERE subdomain_name = '$sub'";
-        $db->setQuery($query);
-        $result = $db->loadResult();
-        if (!$result) $result = 2; // default factory (on capmex)
-        return $result;
-    }
-
-    private $defaultSub = 'capmex';
-
-    /**
-     * Получаем имя субдомена
-     *
-     * @return  string
-     */
-    private function getSubdomain() {
-        $tmp = explode('.', $_SERVER['HTTP_HOST']);
-        if ($tmp[0] == "www") {
-            return $tmp[1];
-        }
-        return $tmp[0];
-    }
-
-    private function decodeJson($strJson) {
-        return json_decode(htmlspecialchars_decode($strJson));
-    }
-
-    private function getCities() {
-        $db = JFactory::getDbo();
-        $db->setQuery("SELECT `subdomain_name` from `#__multidomen_excel`");
-        $results = $db->loadColumn();
-        return $results;
-    }
-
     /**
      * Принимаю настройки мультидомена из админки категории.
      * Перевожу в json и сохраняю в базу.
@@ -129,9 +92,45 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin {
         $this->priceJson = $category->multidomen_price;
     }
 
+    private function getFactory($sub) {
+        $db = JFactory::getDbo();
+        $dbname = $db->quoteName("#__multifactories_city");
+        $query = "SELECT factory_id FROM $dbname
+            WHERE subdomain_name = '$sub'";
+        $db->setQuery($query);
+        $result = $db->loadResult();
+        if (!$result) $result = 2; // default factory (on capmex)
+        return $result;
+    }
+
+    private $defaultSub = 'capmex';
+
     /**
-     * Достаю из бд настройки цен для данного мультидомена.
-     * И данного продукта.
+     * Получаем имя субдомена
+     *
+     * @return  string
+     */
+    private function getSubdomain() {
+        $tmp = explode('.', $_SERVER['HTTP_HOST']);
+        if ($tmp[0] == "www") {
+            return $tmp[1];
+        }
+        return $tmp[0];
+    }
+
+    private function decodeJson($strJson) {
+        return json_decode(htmlspecialchars_decode($strJson));
+    }
+
+    private function getCities() {
+        $db = JFactory::getDbo();
+        $db->setQuery("SELECT `subdomain_name` from `#__multidomen_excel`");
+        $results = $db->loadColumn();
+        return $results;
+    }
+
+    /**
+     * Достаю цены для одного продукта. 
      */
     private function getPrice($product = null) {
         if (!$product) return '0';
@@ -150,6 +149,16 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin {
         $arrServerName =  array_reverse(explode('.', $_SERVER["SERVER_NAME"]));
         $siteName = $arrServerName[1];
         $sub = $this->getSubdomain() == $siteName ? $this->defaultSub : $this->getSubdomain();
+        $price = $this->queryPrices($products, $sub);
+        return array(
+            'price' => $price
+        );
+    }
+
+    /*
+     * Запрашиваю цены у БД
+     */
+    private function queryPrices($products, $sub) {
         $db = JFactory::getDbo();
         $dbname = $db->quoteName("#__multifactories_prices_excel");
         $query = "SELECT price, product_id FROM $dbname
@@ -160,10 +169,8 @@ class PlgJshoppingProductsMultidomen_Price extends JPlugin {
         }
         $query = substr($query, 0, -2) . ")";
         $db->setQuery($query);
-        $price = $db->loadObjectList("product_id");
-        return array(
-            'price' => $price
-        );
+        return $db->loadObjectList("product_id");
     }
+
 }
 ?>
